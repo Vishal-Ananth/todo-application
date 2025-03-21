@@ -7,9 +7,21 @@ const deleteButton = document.querySelectorAll(".delete-button");
 const test = document.querySelectorAll(".todo-checkbox-invisible");
 const todoItemsList = [];
 
-console.log("test", test);
+loadFromLocalStorage();
 
-todoAddButton.addEventListener("click", addTodoToList);
+function loadFromLocalStorage() {
+	const keys = Object.keys(localStorage);
+	keys.forEach((todoId) => {
+		const todoInputValue = localStorage.getItem(todoId);
+		const newTodoListItem = createListNode(todoId, todoInputValue);
+		todoListWrapper.prepend(newTodoListItem);
+	});
+}
+
+todoAddButton.addEventListener("click", () => {
+	addTodoToList();
+	todoInput.value = "";
+});
 todoInput.addEventListener("keyup", (event) => {
 	if (event.key === "Enter") {
 		addTodoToList();
@@ -22,9 +34,17 @@ function addTodoToList() {
 	if (todoInputValue === "") {
 		return;
 	}
+	const todoId = self.crypto.randomUUID();
+	const newTodoListItem = createListNode(todoId, todoInputValue);
+	localStorage.setItem(todoId, todoInputValue);
+	todoListWrapper.prepend(newTodoListItem);
+	todoItemsList.push(todoInputValue);
+}
+
+function createListNode(todoId, todoInputValue) {
 	const newTodoListItem = document.createElement("li");
 	newTodoListItem.innerHTML = `
-        <li tabindex="0" class="todo-list-item">
+        <li tabindex="0" class="todo-list-item" data-todo-id=${todoId}>
             <input type="checkbox" id="todo-checkbox-${
 							todoItemsList.length + 1
 						}" class="todo-checkbox-invisible" />
@@ -42,8 +62,10 @@ function addTodoToList() {
 			</button>
         </li>
     `;
-
-	todoListWrapper.prepend(newTodoListItem);
-	todoItemsList.push(todoInputValue);
-	console.log("test", test);
+	const deleteButton = newTodoListItem.querySelector(".delete-button");
+	deleteButton.addEventListener("click", (event) => {
+		localStorage.removeItem(todoId);
+		todoListWrapper.removeChild(newTodoListItem);
+	});
+	return newTodoListItem;
 }
